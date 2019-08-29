@@ -1,8 +1,25 @@
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
 
+const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+
+//custom token to get the body of request as a string to print
+const morgan = require('morgan');
+morgan.token('body', function getBody(req) {
+  return JSON.stringify(req.body);
+});
+//IT WILL ONLY WORK ON POST REQUESTS
+app.use(
+  morgan(
+    ':method :url :status :res[content-length] - :response-time ms :body',
+    {
+      skip: (req, res) => {
+        return req.method !== 'POST';
+      }
+    }
+  )
+);
 
 let persons = [
   {
