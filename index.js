@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const Person = require('./models/persons');
 
 app.use(cors());
 app.use(express.static('build'));
@@ -55,18 +57,16 @@ app.get('/info', (req, res) => {
 });
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons);
+  Person.find({}).then(people => {
+    res.json(people.map(person => person.toJSON()));
+  });
 });
 
 app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find(person => person.id === id);
-
-  if (person) {
-    res.json(person);
-  } else {
-    res.status(404).end();
-  }
+  Person.findById(req.params.id).then(person => {
+    res.json(person.toJSON());
+    console.log(person);
+  });
 });
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -76,18 +76,14 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end();
 });
 
-const randomId = () => {
-  return Math.floor(Math.random() * 99999999999999999999);
-};
-
 app.post('/api/persons', (req, res) => {
   const body = req.body;
 
-  if (!body.name) {
+  if (body.name === undefined) {
     return res.status(400).json({
       error: 'Name missing'
     });
-  } else if (!body.number) {
+  } else if (body.number === undefined) {
     return res.status(400).json({
       error: 'Number missing'
     });
@@ -101,18 +97,23 @@ app.post('/api/persons', (req, res) => {
     });
   }
 
-  const person = {
+  const person = new Person({
     name: body.name,
-    number: body.number,
-    id: randomId()
-  };
+    number: body.number
+  });
 
-  persons = persons.concat(person);
-
-  res.json(person);
+  person.save().then(savedPerson => {
+    res.json(savedPerson.toJSON());
+  });
 });
 
-const PORT = process.env.PORT || 3001;
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: 'uknown endpoint' });
+};
+
+app.use(unknownEndpoint);
+
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
