@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 
+const cors = require('cors');
+app.use(cors());
+
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
@@ -9,7 +12,7 @@ const morgan = require('morgan');
 morgan.token('body', function getBody(req) {
   return JSON.stringify(req.body);
 });
-//IT WILL ONLY WORK ON POST REQUESTS
+//IT WILL ONLY PRINT ON POST REQUESTS
 app.use(
   morgan(
     ':method :url :status :res[content-length] - :response-time ms :body',
