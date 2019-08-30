@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
-
 const cors = require('cors');
-app.use(cors());
-
 const bodyParser = require('body-parser');
+
+app.use(cors());
+app.use(express.static('build'));
 app.use(bodyParser.json());
 
 //custom token to get the body of request as a string to print
