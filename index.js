@@ -26,6 +26,16 @@ app.use(
   )
 );
 
+const requestLogger = (request, response, next) => {
+  console.log('Method:', request.method);
+  console.log('Path:  ', request.path);
+  console.log('Body:  ', request.body);
+  console.log('---');
+  next();
+};
+
+app.use(requestLogger);
+
 let persons = [
   {
     name: 'Arto Hellas',
@@ -50,10 +60,16 @@ let persons = [
 ];
 
 app.get('/info', (req, res) => {
-  res.send(
-    `<p>Phonebook has info for ${persons.length} people</p>  
-    <p>${new Date()} </p>`
-  );
+  //Probably a poor way to do, but it gets the length of the db(total people in phonebook) then sends response
+  Person.find({}).then(people => {
+    let total = 0;
+    people.forEach(p => total++);
+
+    res.send(
+      `<p>Phonebook has info for ${total} people</p>  
+      <p>${new Date()} </p>`
+    );
+  });
 });
 
 app.get('/api/persons', (req, res) => {
@@ -67,6 +83,21 @@ app.get('/api/persons/:id', (req, res) => {
     res.json(person.toJSON());
     console.log(person);
   });
+});
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body;
+
+  const person = {
+    name: body.name,
+    number: body.number
+  };
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+      res.json(updatedPerson.toJSON());
+    })
+    .catch(error => next(error));
 });
 
 app.delete('/api/persons/:id', (req, res, next) => {
